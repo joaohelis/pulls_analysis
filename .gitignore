@@ -1,6 +1,9 @@
 target/
 repositories/
 repositories
+.classpath
+.project
+.settings/
 backup/
 pom.xml.tag
 pom.xml.releaseBackup
