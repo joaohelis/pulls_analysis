@@ -30,7 +30,9 @@ public class Repository {
 	private Integer watchers;
 	private String url;
 	private Integer tagsCount;	
-	private Integer releasesCount;
+	private int releasesCount;
+	private Integer mergedPullsBeforeCICount;
+	private Integer mergedPullsAfterCICount;
 	
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date startedWithTravis;
@@ -44,6 +46,9 @@ public class Repository {
 	
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, mappedBy = "repo")
 	private List<PullRequest> pullRequests;
+	
+	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, mappedBy = "repo")
+	private List<TravisBuild> travisBuilds;
 
 	/**
 	 * @param fullName
@@ -150,9 +155,34 @@ public class Repository {
 		this.pullRequests = pullRequests;
 	}
 
+	public List<TravisBuild> getTravisBuilds() {
+		return travisBuilds;
+	}
+
+	public void setTravisBuilds(List<TravisBuild> travisBuilds) {
+		this.travisBuilds = travisBuilds;
+	}
+
+	public Integer getMergedPullsBeforeCICount() {
+		return mergedPullsBeforeCICount;
+	}
+
+	public void setMergedPullsBeforeCICount(Integer mergedPullsBeforeCICount) {
+		this.mergedPullsBeforeCICount = mergedPullsBeforeCICount;
+	}
+
+	public Integer getMergedPullsAfterCICount() {
+		return mergedPullsAfterCICount;
+	}
+
+	public void setMergedPullsAfterCICount(Integer mergedPullsAfterCICount) {
+		this.mergedPullsAfterCICount = mergedPullsAfterCICount;
+	}
+	
 	@Override
 	public String toString() {
-		return "Repository [id=" + id + ", fullName=" + fullName + ", watchers=" + watchers + ", tagsCount=" + tagsCount
-				+ ", language=" + language + "]";	
+		return "Repository [id=" + id + ", fullName=" + fullName + ", watchers=" + watchers
+				+ ", mergedPullsBeforeCICount=" + mergedPullsBeforeCICount + ", mergedPullsAfterCICount="
+				+ mergedPullsAfterCICount + ", language=" + language + "]";
 	}	
 }

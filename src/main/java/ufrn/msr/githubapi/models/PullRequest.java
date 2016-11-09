@@ -58,6 +58,9 @@ public class PullRequest {
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, mappedBy = "pullRequest")
 	private List<PullRequestComment> comments;
 	
+	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, mappedBy = "pullRequest")
+	private List<TravisBuild> travisBuilds;
+	
 	@ManyToOne
 	private Release release;
 	
@@ -189,6 +192,12 @@ public class PullRequest {
 	}
 	public void setState(String state) {
 		this.state = state;
+	}
+	public List<TravisBuild> getTravisBuilds() {
+		return travisBuilds;
+	}
+	public void setTravisBuilds(List<TravisBuild> travisBuilds) {
+		this.travisBuilds = travisBuilds;
 	}
 	@Override
 	public String toString() {

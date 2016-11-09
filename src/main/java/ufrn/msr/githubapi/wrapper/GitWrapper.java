@@ -111,8 +111,8 @@ public class GitWrapper {
 			
 			int commits = 0;
 			
-			Release base = releases.get(i+1),
-					head = releases.get(i);
+			Release base = releases.get(i),
+					head = releases.get(i+1);
 			
 			String[] command = new String[] {"git", "log",
 					"--pretty=oneline",

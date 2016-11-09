@@ -38,8 +38,7 @@ public class GitHubWrapper {
 	
 	private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 	private String oAuthToken;
-	
-	
+		
 	public GitHubWrapper(String oAuthToken){
 		this.oAuthToken = oAuthToken;
 	}
@@ -226,6 +225,55 @@ public class GitHubWrapper {
 		return events;
 	}	
 	
+	public PullRequest getPullRequest(int pullNumber, String repoFullName) throws GitHubWrapperException{
+		try{
+			URL url = new URL("https://api.github.com/repos/"+
+					repoFullName+"/pulls/" +
+					pullNumber+"?access_token=" + oAuthToken);
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			
+			if (conn.getResponseCode() != 200) 
+				throw new GitHubWrapperException("Error: " + conn.getResponseCode());
+			
+			BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			Gson gson = new Gson();
+			JsonObject json = gson.fromJson(reader, JsonObject.class);
+			
+			PullRequest pullRequest = new PullRequest();
+			
+			String user = null;
+			try{
+				user = json.get("user").getAsJsonObject().get("login").getAsString();				
+			}catch(Exception e){}
+			
+			String assignee = null;
+			try{
+				assignee = json.get("assignee").getAsJsonObject().get("login").getAsString();
+			}catch(Exception e){}
+			
+			pullRequest.setAdditions(json.get("additions").getAsInt());				
+			pullRequest.setAssignee(assignee);
+			pullRequest.setChangedFiles(json.get("changed_files").getAsInt());
+			pullRequest.setClosedAt((json.get("closed_at").isJsonNull())? null: DATE_FORMAT.parse(json.get("closed_at").getAsString()));
+			pullRequest.setClosedBy(null);
+			pullRequest.setCommentsCount(json.get("comments").getAsInt());
+			pullRequest.setCreatedAt((json.get("created_at").isJsonNull())? null: DATE_FORMAT.parse(json.get("created_at").getAsString()));
+			pullRequest.setDeletions(json.get("deletions").getAsInt());
+			pullRequest.setMergedAt((json.get("merged_at").isJsonNull())? null: DATE_FORMAT.parse(json.get("merged_at").getAsString()));
+			pullRequest.setNumber(json.get("number").getAsInt());
+			pullRequest.setReviewComments(json.get("review_comments").getAsInt());
+			pullRequest.setTitle(json.get("title").getAsString());
+			pullRequest.setUser(user);
+			pullRequest.setDescription((json.get("body").isJsonNull())? null: json.get("body").getAsString());
+			pullRequest.setMerged(json.get("merged").getAsBoolean());
+			pullRequest.setState(json.get("state").getAsString());	
+			
+			return pullRequest;						
+		}catch(Exception e){
+			throw new GitHubWrapperException(e);
+		}			
+	}
+	
 	public List<PullRequestComment> getComments(PullRequest p) throws GitHubWrapperException{
 		List<PullRequestComment> comments = null;
 		try{						
@@ -279,10 +327,10 @@ public class GitHubWrapper {
 			pullRequest.setUser(ghPull.getUser().getLogin());	
 			pullRequest.setDescription(ghPull.getBody());
 			pullRequest.setMerged(ghPull.isMerged());
-			pullRequest.setState(ghPull.getState().toString());
+			pullRequest.setState(ghPull.getState().toString());			
 		} catch (Exception e) {
 			throw new GitHubWrapperException(e);
-		}		
+		}
 	}
 	
 	public String getoAuthToken() {

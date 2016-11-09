@@ -44,7 +44,7 @@ public class GitLocalAndRemoteMiner {
 				+ repo.getFullName().substring(repo.getFullName().indexOf('/') + 1, repo.getFullName().length());
 		try {
 			List<Release> releases = repo.getReleases();
-			Collections.sort(releases, (r1, r2) -> r2.getPublishedAt().compareTo(r1.getPublishedAt()));
+			Collections.sort(releases, (r1, r2) -> r1.getPublishedAt().compareTo(r2.getPublishedAt()));
 			GitWrapper.pullRequestAndCommitsByReleases(releases, repoPath, repo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -121,10 +121,10 @@ public class GitLocalAndRemoteMiner {
 			GitHubWrapper ghwrapper = null;
 
 			updateTokens(tokens);
-			System.out.println("GitHuib - The token's information were updated!");
+			System.out.println("GitHub - The token's information were updated!");
 			token = bestToken(tokens, BestTokenOption.REMAING).get(0);
 			github = GitHub.connectUsingOAuth(token);
-			GHRepository ghRepo = github.getRepository(repo.getFullName());	
+			GHRepository ghRepo = github.getRepository(repo.getFullName());
 
 			GHPullRequestQueryBuilder pullQB = ghRepo.queryPullRequests();
 
@@ -139,9 +139,9 @@ public class GitLocalAndRemoteMiner {
 						
 			pullDAO.beginTransaction();
 			
-			while(pagedIterator.hasNext()){
+			while(pagedIterator.hasNext()){		
 
-				for (GHPullRequest ghPullRequest : pagedIterator.nextPage()) {			
+				for (GHPullRequest ghPullRequest: pagedIterator.nextPage()) {			
 	
 					if (remaining < 100) {
 	
@@ -186,31 +186,36 @@ public class GitLocalAndRemoteMiner {
 						System.out.println("DONE!");
 	
 						ghRepo = github.getRepository(repo.getFullName());
-						remaining = tokens.get(token).remaining - 1;
+						remaining = tokens.get(token).remaining - 2;
 					}
 					try {
 	
-						System.out.print(++count + " --- [Remaing=" + remaining + "] ---");
-						
-						PullRequest pullRequest = new PullRequest();											
+						System.out.print(++count + " --- [Remaing=" + remaining + "] ---");															
 						
 						if(pullsMAP.containsKey(ghPullRequest.getNumber())){
 							System.out.println(repo.getFullName() + " --- " + pullsMAP.get(ghPullRequest.getNumber()) + " --- DONE!");
 							if (count % 100 == 0) {
 								pullDAO.commitTransaction();
 								pullDAO.beginTransaction();
-								remaining--; // <<<<<<<<<<<<<<<<<
 							}
 							continue;
 						}
+												
+						PullRequest pullRequest = null;
+						try{
+							remaining--; // <<<<<<<<<<<<<<<<<
+							pullRequest = ghwrapper.getPullRequest(ghPullRequest.getNumber(), repo.getFullName());
+						}catch(GitHubWrapperException ghException){
+							ghException.printStackTrace();
+							continue;
+						}
 						
-						GitHubWrapper.pullRequestInfoTransfer(pullRequest, ghPullRequest);
 						pullRequest.setRepo(repo);
 	
 						remaining--; // <<<<<<<<<<<<<<<<<
-						pullRequest.setEvents(ghwrapper.getEvents(pullRequest));
+						pullRequest.setEvents(ghwrapper.getEvents(pullRequest));				
 	
-						if(ghPullRequest.getReviewComments() != 0){
+						if(pullRequest.getReviewComments() != 0){
 							remaining--; // <<<<<<<<<<<<<<<<<
 							pullRequest.setComments(ghwrapper.getComments(pullRequest));
 						}
@@ -231,12 +236,12 @@ public class GitLocalAndRemoteMiner {
 						remaining--; // <<<<<<<<<<<<<<<<<
 					}
 				}
-			}
+				remaining--;
+			}			
 			if (count % 100 != 0) {
 				pullDAO.commitTransaction();
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
